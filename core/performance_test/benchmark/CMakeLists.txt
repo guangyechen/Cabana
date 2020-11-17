@@ -12,3 +12,8 @@ if(Kokkos_ENABLE_SERIAL OR Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENMP)
   add_executable(BinSortPerformance Cabana_BinSortPerformance.cpp)
   target_link_libraries(BinSortPerformance cabanacore)
 endif()
+
+if(Cabana_ENABLE_MPI AND Kokkos_ENABLE_OPENMP)
+  add_executable(TestMigration test_migration.cpp)
+  target_link_libraries(TestMigration cabanacore)
+endif()
