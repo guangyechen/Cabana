@@ -41,6 +41,7 @@ Mon Nov 16 17:28:54 MST 2020
 
 #define NTST 16 //number of tests varying the message length
 #define REPS 1001 //within each test, repeat REPS times
+#define WARMUP 4 //number of iterations for mpi warm up
 //#define print_string_8b
 
 double
@@ -92,15 +93,17 @@ void testMPI_Cabana(MPI_Comm comm)
 	    for(int i=0;i<num_tuple;++i)  vpod[i] = 'a';
 	    src=dst=1;
 	    double avrg = 0;
-	    for(int i=0;i<3;i++){ /* warmup */
-	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
-	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+	    for(int i=0;i<WARMUP;i++){ /* warmup */
+		//	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+		//	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+	       MPI_Sendrecv_replace(vpod,num_tuple,MPI_BYTE,dst,0,src,0,comm,&status);
 	   }
 
 	   for(int i=0;i<REPS;i++){
 	       t = secs();
-	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
-	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+	       //	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+	       //	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+	       MPI_Sendrecv_replace(vpod,num_tuple,MPI_BYTE,dst,0,src,0,comm,&status);
 	       q=secs();
 	       t = q-t;
 	       avrg += t;      	
@@ -109,18 +112,39 @@ void testMPI_Cabana(MPI_Comm comm)
            avrg = avrg/REPS;
 	   printf ("%d\t %f \t",
 		    num_tuple, 2.e-6*num_tuple/avrg);	   
+#ifdef  print_string_8b
+	   if(it==1){
+	       std::cout << "AFTER Sendrecv_replace" << std::endl
+                  << "(Rank " << comm_rank << ") ";
+	       for ( std::size_t i = 0; i < num_tuple; ++i )
+		   std::cout << vpod[i] << " ";
+	       std::cout << std::endl;
+	   }
+#endif
+
 	}else{
 	    for(int i=0;i<num_tuple;++i)  vpod[i] = 'b';
 	    src=dst=0;
-	    for(int i=0;i<3;i++){ /* warmup */
-	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
-	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+	    for(int i=0;i<WARMUP;i++){ /* warmup */
+		//	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+		//	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+	       MPI_Sendrecv_replace(vpod,num_tuple,MPI_BYTE,dst,0,src,0,comm,&status);
 	   }
 
 	    for(int i=0;i<REPS;i++){
-	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
-	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+		//	       MPI_Recv(vpod,num_tuple,MPI_BYTE,src,0,comm,&status);
+		//	       MPI_Send(vpod,num_tuple,MPI_BYTE,dst,0,comm);
+	       MPI_Sendrecv_replace(vpod,num_tuple,MPI_BYTE,dst,0,src,0,comm,&status);
 	    }
+#ifdef  print_string_8b
+	   if(it==1){
+	       std::cout << "AFTER Sendrecv_replace" << std::endl
+                  << "(Rank " << comm_rank << ") ";
+	       for ( std::size_t i = 0; i < num_tuple; ++i )
+		   std::cout << vpod[i] << " ";
+	       std::cout << std::endl;
+	   }
+#endif
 	    
 	}
 
